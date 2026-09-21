@@ -59,10 +59,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 //        cell_tvs = new ArrayList<TextView>();
-//
-//
-//
-//
+
+        gameGrid = findViewById(R.id.gameGrid);
+        mineCounterText = findViewById(R.id.mineCounterText);
+        timerText = findViewById(R.id.timerText);
+        modeButton = findViewById(R.id.modeButton);
+
+        // listener for modeButton
+        modeButton.setOnClickListener(view -> {
+            if(gameEnded) {
+                return;
+            }
+            flagMode = !flagMode;
+            updateModeButton();
+        });
+
+        gameGrid.post(this::startNewGame); // this takes care of dynamic building of grid
+
 //        // add dynamically added cells
 //        LayoutInflater li = LayoutInflater.from(this);
 //        for (int i = 0; i<BOARD_SIZE; i++) {
@@ -85,11 +98,33 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // for when we want to build initial new game, called during onCreate
     private void startNewGame() {
+        stopTimer();
 
+        board = new Cell[BOARD_SIZE][BOARD_SIZE];
+        cellViews = new TextView[BOARD_SIZE][BOARD_SIZE];
+
+        flagMode = false;
+        gameEnded = false;
+        waitingForResultsTap = false;
+        playerWon = false;
+        flagsPlaced = 0;
+        safeCellsRevealed = 0;
+        elapsedSeconds = 0;
+
+        createEmptyBoard();
+        placeMines();
+        countAdjacentMines();
+        buildGridViews();
+
+        updateMineCounter();
+        updateTimerText();
+        updateModeButton();
+        startTimer();
     }
 
-    // create empty grid layour of cells
+    // create empty grid layout of cells
     private void createEmptyBoard() {
         for(int i = 0; i < BOARD_SIZE; i++) {
             for(int j = 0; j < BOARD_SIZE; j++) {
