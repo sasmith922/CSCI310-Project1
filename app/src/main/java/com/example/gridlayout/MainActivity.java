@@ -10,6 +10,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Button;
+import android.content.Intent;
+import android.os.Handler;
 
 import java.util.ArrayList;
 import java.util.Queue;
@@ -27,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private GridLayout gameGrid;
     private TextView mineCounterText;
     private TextView timerText;
+    private Button modeButton;
 
     private boolean flagMode = false;
     private boolean gameEnded = false;
@@ -38,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private int elapsedSeconds = 0;
 
     private Runnable timerRunnable;
+    private final Handler timerHandler = new Handler();
 
     // save the TextViews of all cells in an array, so later on,
     // when a TextView is clicked, we know which cell it is
@@ -293,22 +298,105 @@ public class MainActivity extends AppCompatActivity {
 
     // output logic for when a game is finished
     private void finishGame(boolean won) {
+        gameEnded = true;
+        waitingForResultsTap = true;
+        playerWon = won;
 
+        stopTimer();
+        revealAllCells();
+
+        if (won) {
+            modeButton.setText("You won - tap any cell");
+        } else {
+            modeButton.setText("You lost - tap any cell");
+        }
     }
 
-    // output logic for when clicking on a cell
+    private void revealAllCells() {
+        for(int i = 0; i < BOARD_SIZE; i++) {
+            for(int j = 0; j < BOARD_SIZE; j++) {
+                board[i][j].revealed = true;
+                renderCell(i, j);
+            }
+        }
+    }
+
+    // output logic for when clicking on a cell or when revealing all
     private void renderCell(int row, int col) {
+        Cell currCell = board[row][col];
+        TextView cellView = cellViews[row][col];
 
+        if(!currCell.revealed) {
+            cellView.setBackgroundColor(Color.LTGRAY);
+            if(currCell.flagged) {
+                cellView.setText(getString(R.string.flag)); // find right symbol
+            } else {
+                cellView.setText("");
+            }
+            return;
+        }
 
+        if(currCell.hasMine) {
+            cellView.setText(getString(R.string.mine)); // find right symbol
+            return;
+        }
+
+        cellView.setBackgroundColor(Color.LTGRAY);
+        cellView.setTextColor(Color.BLACK);
+
+        if(currCell.adjacentMines == 0) {
+            cellView.setText("");
+        } else {
+            cellView.setText(String.valueOf(currCell.adjacentMines));
+        }
     }
 
     private boolean isValidCell(int row, int col) {
         return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
     }
 
-    private void updateMineCounter() {}
+    private void updateMineCounter() {
+        mineCounterText.setText(getString(R.string.flag) + " " + (MINE_COUNT-flagsPlaced));
+    }
 
-    private void openResultsScreen() {}
+    private void updateTimerText() {
+        timerText.setText(getString(R.string.clock) + " " + elapsedSeconds);
+    }
+
+    private void updateModeButton() {
+        if(flagMode) {
+            modeButton.setText(getString(R.string.flag) + "FLAG MODE");
+        } else { // dig mode
+            modeButton.setText(getString(R.string.pick) + "DIG MODE");
+        }
+    }
+
+    private void startTimer() {
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                elapsedSeconds++;
+                updateTimerText();
+                timerHandler.postDelayed(this, 1000);
+            }
+        };
+
+        timerHandler.postDelayed(timerRunnable, 1000);
+    }
+
+    private void stopTimer() {
+        if(timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+        }
+    }
+
+    private void openResultsScreen() {
+        Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+        intent.putExtra("won", playerWon);
+        intent.putExtra("elapsed seconds", elapsedSeconds);
+        startActivity(intent);
+        finish();
+    }
 
 
 
@@ -334,4 +422,12 @@ public class MainActivity extends AppCompatActivity {
             tv.setBackgroundColor(Color.LTGRAY);
         }
     }
+
+    // for stopping timer on destroy
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopTimer();
+    }
+
 }
