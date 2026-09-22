@@ -362,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
         TextView cellView = cellViews[row][col];
 
         if(!currCell.revealed) {
-            cellView.setBackgroundColor(Color.LTGRAY);
+            cellView.setBackgroundColor(Color.GREEN);
             if(currCell.flagged) {
                 cellView.setText(getString(R.string.flag)); // find right symbol
             } else {
@@ -400,9 +400,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateModeButton() {
         if(flagMode) {
-            modeButton.setText(getString(R.string.flag) + "FLAG MODE");
+            modeButton.setText(getString(R.string.flag));
         } else { // dig mode
-            modeButton.setText(getString(R.string.pick) + "DIG MODE");
+            modeButton.setText(getString(R.string.pick));
         }
     }
 
@@ -428,7 +428,7 @@ public class MainActivity extends AppCompatActivity {
     private void openResultsScreen() {
         Intent intent = new Intent(MainActivity.this, ResultActivity.class);
         intent.putExtra("won", playerWon);
-        intent.putExtra("elapsed seconds", elapsedSeconds);
+        intent.putExtra("elapsedSeconds", elapsedSeconds);
         startActivity(intent);
         finish();
     }
