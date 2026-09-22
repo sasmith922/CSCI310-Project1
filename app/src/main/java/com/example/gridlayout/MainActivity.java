@@ -241,11 +241,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // toggle flag
-        currCell.flagged = !currCell.flagged;
         if(currCell.flagged) {
+            currCell.flagged = false;
+            flagsPlaced--;
+        } else if(flagsPlaced < MINE_COUNT) {
+            currCell.flagged = true;
             flagsPlaced++;
         } else {
-            flagsPlaced--;
+            return;
         }
 
         updateMineCounter();
